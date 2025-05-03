@@ -4,6 +4,11 @@ import morgan from 'morgan'
 import { fileURLToPath } from 'url'
 import path ,{dirname} from 'path'
 import bodyParser from 'body-parser'
+import { createWorker }  from 'tesseract.js'
+import fs from 'fs'
+import multer from 'multer'
+
+
 
 mongoose.connect("mongodb://localhost:27017/HISTORY")
 
@@ -20,12 +25,33 @@ const app = express()
 const _file = fileURLToPath(import.meta.url)
 const _dir = path.dirname(_file)
 app.use(morgan('dev'))
-app.use(bodyParser.urlencoded({extended:true}))
-app.use(bodyParser.json())
-app.use(express.static('dist/FRONTEND'))
-app.get('/',(req,res)=>{
-    res.sendFile(path.join(_dir+"./FRONTEND/index.html"))
+app.use(express.json());
+
+
+
+const worker =  createWorker()
+var storage = multer.diskStorage({
+    destination:function(req,file,cb){
+        cb(null,"./dist/uploads")
+
+    },filename:function(req,file,cb){
+        cb(null,file.originalname)
+    }
 })
+
+ var upload = multer({storage:storage})
+
+app.use(express.static(_dir+'/FRONTEND'))
+app.use('/uploads',express.static('uploads'))
+app.post('/single',upload.single('in'),function(req,res,next){
+    console.log("in server")
+    res.sendFile(_dir+"/FRONTEND/index.html")
+   /*  console.log(JSON.stringify(req.file))
+    var response = "File uploaded.<br>"
+     res.send(response) */
+    
+})
+
 
 
 
