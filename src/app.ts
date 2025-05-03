@@ -25,47 +25,30 @@ const app = express()
 const _file = fileURLToPath(import.meta.url)
 const _dir = path.dirname(_file)
 app.use(morgan('dev'))
-/* app.use(express.json());
-app.use(bodyParser.urlencoded({extended:true}))
-app.use(bodyParser.json()) */
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-//app.use(express.static('dist/FRONTEND'))
+app.use(express.json());
 
 
 
 const worker =  createWorker()
-const storage = multer.diskStorage({
-    destination:(req,file,cb) => {
-        cb(null,"./uploads")
+var storage = multer.diskStorage({
+    destination:function(req,file,cb){
+        cb(null,"./dist/uploads")
 
+    },filename:function(req,file,cb){
+        cb(null,file.originalname)
     }
-    /* filename: (req:any,res,cb) =>{
-        cb(null,req.file)
-    } */
 })
 
- const upload = multer({storage:storage,limits:{fileSize:50*1024*1024}})
+ var upload = multer({storage:storage})
 
- app.set("view engine","ejs")
- app.get('/',(req,res)=>{
-    //res.sendFile(path.join(_dir+"./FRONTEND/index.ejs"))
-    res.render("index.ejs")
-})
-
-
-app.post('/uploads',upload.single('in'),(req,res)=>{
+app.use(express.static(_dir+'/FRONTEND'))
+app.use('/uploads',express.static('uploads'))
+app.post('/single',upload.single('in'),function(req,res,next){
     console.log("in server")
-    const file = req.body.file
-    const file2 = req.body
-   
-    console.log("Received file",file,file2)
-     /* upload(req,res,err=>{
-        
-        console.log("in the server")
-        console.log(req.file)
-    }) 
-     */
+    res.sendFile(_dir+"/FRONTEND/index.html")
+   /*  console.log(JSON.stringify(req.file))
+    var response = "File uploaded.<br>"
+     res.send(response) */
     
 })
 
